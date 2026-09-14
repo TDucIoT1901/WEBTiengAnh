@@ -260,6 +260,54 @@ You must ALWAYS respond ONLY in valid JSON format matching this schema:
 
     return await this._callGemini(systemPrompt, message);
   }
+
+  async gradeTOEICSpeaking(response, questionType, promptContent) {
+    const systemPrompt = `Act as an expert TOEIC Speaking examiner. Evaluate the user's spoken response (provided as transcribed text) to the given question type and prompt.
+Question Type: ${questionType}
+Prompt: ${promptContent}
+
+Evaluate based on pronunciation indicators (if spelled weirdly or grammar issues), grammar, vocabulary, cohesion, and relevance.
+You must ALWAYS respond ONLY in valid JSON format matching this schema:
+{
+  "score": <number 0-3 for Q1-9, or 0-5 for Q10-11>,
+  "strengths": ["<strength 1>", "<strength 2>"],
+  "weaknesses": ["<weakness 1>", "<weakness 2>"],
+  "errors": [
+    {
+      "original": "<error text>",
+      "correction": "<corrected text>",
+      "explanationVi": "<Vietnamese explanation and how to fix>"
+    }
+  ],
+  "improvedResponse": "<a better, native-like response>",
+  "overallFeedbackVi": "<Detailed overall feedback in Vietnamese>"
+}`;
+    return await this._callGemini(systemPrompt, response);
+  }
+
+  async gradeTOEICWriting(response, questionType, promptContent) {
+    const systemPrompt = `Act as an expert TOEIC Writing examiner. Evaluate the user's written response to the given question type and prompt.
+Question Type: ${questionType}
+Prompt: ${promptContent}
+
+Evaluate based on grammar, vocabulary, relevance, cohesion, and task completion.
+You must ALWAYS respond ONLY in valid JSON format matching this schema:
+{
+  "score": <number 0-3 for Q1-5, 0-4 for Q6-7, or 0-5 for Q8>,
+  "strengths": ["<strength 1>", "<strength 2>"],
+  "weaknesses": ["<weakness 1>", "<weakness 2>"],
+  "errors": [
+    {
+      "original": "<error text>",
+      "correction": "<corrected text>",
+      "explanationVi": "<Vietnamese explanation and how to fix>"
+    }
+  ],
+  "improvedResponse": "<a better, native-like response>",
+  "overallFeedbackVi": "<Detailed overall feedback in Vietnamese>"
+}`;
+    return await this._callGemini(systemPrompt, response);
+  }
 }
 
 const geminiService = new GeminiService();
