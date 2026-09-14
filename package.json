@@ -1,0 +1,18 @@
+{
+  "name": "vocabdaily",
+  "version": "1.0.0",
+  "description": "VocabDaily - Multi-user vocabulary learning web app with AI Tutor",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.9.2"
+  }
+}

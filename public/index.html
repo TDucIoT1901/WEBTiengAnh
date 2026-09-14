@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Vocab Tracker - Nhật Ký Từ Vựng Học Theo Ngày</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-book-bookmark"></i>
+        </div>
+        <div class="logo-text">
+          <h1>VocabDaily</h1>
+          <p>Nhật ký từ vựng theo ngày</p>
+        </div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="header-stats">
+        <div class="stat-pill streak-pill" title="Chuỗi ngày học liên tục">
+          <i class="fa-solid fa-fire streak-icon"></i>
+          <span id="streakCount">0</span> Ngày liên tiếp
+        </div>
+        <div class="stat-pill total-pill" title="Tổng số từ vựng đã ghi nhận">
+          <i class="fa-solid fa-layer-group"></i>
+          <span id="totalVocabCount">0</span> Từ vựng
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-btn active" data-tab="timelineTab">
+          <i class="fa-regular fa-calendar-days"></i> Nhật Ký Theo Ngày
+        </button>
+        <button class="nav-btn" data-tab="flashcardTab">
+          <i class="fa-solid fa-clone"></i> Ôn Tập Flashcard
+        </button>
+        <button class="nav-btn" data-tab="statsTab">
+          <i class="fa-solid fa-chart-pie"></i> Thống Kê & Chuỗi
+        </button>
+        <button class="nav-btn" data-tab="aiTutorTab">
+          <i class="fa-solid fa-robot"></i> AI Tutor
+        </button>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="header-actions">
+        <div class="user-info">
+          <span class="user-avatar" id="userAvatar"><i class="fa-solid fa-user"></i></span>
+          <span class="user-name" id="userName">User</span>
+        </div>
+        <button class="btn btn-secondary icon-btn" id="logoutBtn" title="Đăng xuất">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+        <button class="btn btn-primary" id="openAddModalBtn">
+          <i class="fa-solid fa-plus"></i> Thêm Từ Mới
+        </button>
+        <button class="btn btn-secondary icon-btn" id="openApiKeyModalBtn" title="Cài đặt Gemini API Key">
+          <i class="fa-solid fa-key"></i>
+        </button>
+        <button class="btn btn-secondary icon-btn" id="openDataModalBtn" title="Sao lưu & Khôi phục dữ liệu">
+          <i class="fa-solid fa-floppy-disk"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- TAB 1: TIMELINE / NHẬT KÝ THEO NGÀY -->
+      <section id="timelineTab" class="tab-content active">
+        <!-- Control Bar (Search, Date Filter, Tag Filter, Status Filter) -->
+        <div class="filter-card glass-panel">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Tìm kiếm từ vựng, phiên âm, nghĩa...">
+            <button id="clearSearchBtn" class="clear-btn hidden"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-item">
+              <label><i class="fa-regular fa-calendar"></i> Ngày:</label>
+              <input type="date" id="filterDateInput">
+              <button class="btn-xs" id="clearDateBtn" title="Xóa lọc ngày">Tất cả</button>
+            </div>
+
+            <div class="filter-item">
+              <label><i class="fa-solid fa-hashtag"></i> Thẻ:</label>
+              <select id="filterTagSelect">
+                <option value="all">Tất cả chủ đề</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label><i class="fa-solid fa-signal"></i> Trạng thái:</label>
+              <select id="filterStatusSelect">
+                <option value="all">Tất cả mức độ</option>
+                <option value="new">🆕 Mới học</option>
+                <option value="reviewing">🔄 Đang ôn</option>
+                <option value="mastered">✅ Thành thạo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Summary Bar -->
+        <div class="timeline-summary">
+          <span id="resultCountText">Đang hiển thị 0 từ vựng</span>
+          <div class="quick-days-filter">
+            <button class="day-chip active" data-days="all">Tất cả ngày</button>
+            <button class="day-chip" data-days="today">Hôm nay</button>
+            <button class="day-chip" data-days="yesterday">Hôm qua</button>
+            <button class="day-chip" data-days="week">7 ngày qua</button>
+          </div>
+        </div>
+
+        <!-- Vocab Feed Container -->
+        <div id="vocabFeedContainer" class="vocab-feed">
+          <!-- Dynamic Content rendered by JS -->
+        </div>
+      </section>
+
+      <!-- TAB 2: ÔN TẬP FLASHCARD -->
+      <section id="flashcardTab" class="tab-content">
+        <div class="flashcard-controls glass-panel">
+          <div class="fc-filter-item">
+            <label><i class="fa-solid fa-filter"></i> Bộ từ ôn tập:</label>
+            <select id="fcFilterSelect">
+              <option value="all">Tất cả từ vựng</option>
+              <option value="due">Cần ôn luyện (Mới + Đang ôn)</option>
+              <option value="today">Từ học Hôm nay</option>
+              <option value="new">Chỉ từ Mới học</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" id="restartFcBtn">
+            <i class="fa-solid fa-rotate-right"></i> Bắt đầu lại
+          </button>
+        </div>
+
+        <div id="flashcardDeck" class="flashcard-deck-container">
+          <div class="fc-progress-bar">
+            <div class="fc-progress-fill" id="fcProgressFill"></div>
+          </div>
+          <div class="fc-counter" id="fcCounter">Thẻ 1 / 10</div>
+
+          <!-- 3D Flip Card -->
+          <div class="card-3d-wrapper" id="card3d">
+            <div class="card-3d-inner" id="card3dInner">
+              <!-- Front Side -->
+              <div class="card-side card-front glass-panel">
+                <span class="fc-type-badge" id="fcType">noun</span>
+                <button class="audio-btn-lg" id="fcFrontAudioBtn" title="Phát âm">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <h2 class="fc-word" id="fcWord">word</h2>
+                <p class="fc-phonetics" id="fcPhonetics">/wɜːd/</p>
+                <div class="fc-hint">
+                  <i class="fa-regular fa-hand-pointer"></i> Nhấp vào thẻ để xem Nghĩa & Ví dụ
+                </div>
+              </div>
+
+              <!-- Back Side -->
+              <div class="card-side card-back glass-panel">
+                <h3 class="fc-meaning" id="fcMeaning">Nghĩa tiếng Việt</h3>
+                <div class="fc-example-box" id="fcExampleBox">
+                  <i class="fa-solid fa-quote-left example-quote-icon"></i>
+                  <p class="fc-example" id="fcExample">Sentence example goes here...</p>
+                </div>
+                <div class="fc-tags" id="fcTags">
+                  <!-- Tag badges -->
+                </div>
+                <div class="fc-date-tag" id="fcDate">Đã thêm ngày: 12/08/2026</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Self Evaluation Buttons -->
+          <div class="fc-actions">
+            <button class="fc-btn fc-btn-hard" id="fcBtnHard">
+              <i class="fa-solid fa-xmark"></i> Chưa thuộc
+            </button>
+            <button class="fc-btn fc-btn-good" id="fcBtnGood">
+              <i class="fa-solid fa-check"></i> Đang nhớ
+            </button>
+            <button class="fc-btn fc-btn-easy" id="fcBtnEasy">
+              <i class="fa-solid fa-star"></i> Thành thạo
+            </button>
+          </div>
+        </div>
+
+        <!-- Deck Complete Screen -->
+        <div id="fcCompleteScreen" class="fc-complete-screen glass-panel hidden">
+          <div class="trophy-icon">🎉</div>
+          <h2>Chúc mừng! Bạn đã hoàn thành bộ ôn tập</h2>
+          <p>Hãy giữ vững phong độ học tập hàng ngày nhé!</p>
+          <button class="btn btn-primary btn-lg" id="fcRestartCompleteBtn">
+            <i class="fa-solid fa-rotate-right"></i> Ôn tập lại
+          </button>
+        </div>
+      </section>
+
+      <!-- TAB 3: THỐNG KÊ & CHUỖI HỌC -->
+      <section id="statsTab" class="tab-content">
+        <div class="stats-grid">
+          <!-- Overview Cards -->
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon color-blue">
+              <i class="fa-solid fa-book-open"></i>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-value" id="statsTotalWords">0</span>
+              <span class="stat-label">Tổng từ đã nạp</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon color-amber">
+              <i class="fa-solid fa-fire"></i>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-value" id="statsStreak">0</span>
+              <span class="stat-label">Chuỗi học tập (Ngày)</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon color-green">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-value" id="statsMastered">0</span>
+              <span class="stat-label">Từ đã thành thạo</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass-panel">
+            <div class="stat-card-icon color-purple">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-value" id="statsActiveDays">0</span>
+              <span class="stat-label">Tổng ngày ghi chép</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mastery Distribution Section -->
+        <div class="stats-detail-grid">
+          <div class="chart-card glass-panel">
+            <h3><i class="fa-solid fa-chart-bar"></i> Phân bổ Mức độ thuộc từ</h3>
+            <div class="progress-bar-group">
+              <div class="pbar-item">
+                <div class="pbar-header">
+                  <span>🆕 Mới học</span>
+                  <span id="pbarNewCount">0 từ (0%)</span>
+                </div>
+                <div class="pbar-track">
+                  <div class="pbar-fill fill-new" id="pbarNewFill" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="pbar-item">
+                <div class="pbar-header">
+                  <span>🔄 Đang ôn tập</span>
+                  <span id="pbarReviewCount">0 từ (0%)</span>
+                </div>
+                <div class="pbar-track">
+                  <div class="pbar-fill fill-reviewing" id="pbarReviewFill" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="pbar-item">
+                <div class="pbar-header">
+                  <span>✅ Đã thành thạo</span>
+                  <span id="pbarMasteredCount">0 từ (0%)</span>
+                </div>
+                <div class="pbar-track">
+                  <div class="pbar-fill fill-mastered" id="pbarMasteredFill" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Topic Badges Breakdown -->
+          <div class="chart-card glass-panel">
+            <h3><i class="fa-solid fa-tags"></i> Các chủ đề đã nạp</h3>
+            <div id="statsTagsContainer" class="tags-cloud">
+              <!-- Dynamically filled -->
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- TAB 4: AI TUTOR - HỌC NGOẠI NGỮ TƯƠNG TÁC -->
+      <section id="aiTutorTab" class="tab-content">
+        <div class="ai-tutor-container">
+          <!-- API Key Status Banner -->
+          <div class="api-key-banner glass-panel disconnected" id="apiKeyBanner">
+            <div class="api-key-banner-left">
+              <i class="fa-solid fa-circle-info"></i>
+              <span id="apiKeyBannerText">Chưa cấu hình Gemini API Key. Nhấn nút <strong>🔑 Cài đặt API Key</strong> ở header để bắt đầu.</span>
+            </div>
+            <button class="btn btn-sm btn-secondary" id="bannerSetupApiBtn">
+              <i class="fa-solid fa-gear"></i> Cài đặt
+            </button>
+          </div>
+
+          <!-- Sub Navigation -->
+          <div class="ai-sub-nav">
+            <button class="ai-sub-btn active" data-panel="writingPanel">
+              <i class="fa-solid fa-pen-fancy"></i> Chấm Bài Viết
+            </button>
+            <button class="ai-sub-btn" data-panel="conversationPanel">
+              <i class="fa-solid fa-comments"></i> Đối Thoại AI
+            </button>
+            <button class="ai-sub-btn" data-panel="vocabSuggestPanel">
+              <i class="fa-solid fa-lightbulb"></i> Gợi Ý Từ Vựng
+            </button>
+          </div>
+
+          <!-- ===== PANEL 1: CHẤM BÀI VIẾT ===== -->
+          <div class="ai-panel active" id="writingPanel">
+            <div class="writing-input-area glass-panel">
+              <h3><i class="fa-solid fa-pen-nib"></i> Nhập bài viết để chấm</h3>
+              <textarea class="writing-textarea" id="writingInput" placeholder="Dán bài viết tiếng Anh của bạn vào đây... AI sẽ phân tích ngữ pháp, cấu trúc, từ vựng và đưa ra phản hồi chi tiết."></textarea>
+              <div class="writing-controls">
+                <div class="writing-control-left">
+                  <select id="writingTaskType" class="ai-select">
+                    <option value="general">📝 Bài viết chung</option>
+                    <option value="ielts_task1">📊 IELTS Task 1</option>
+                    <option value="ielts_task2">📖 IELTS Task 2</option>
+                    <option value="email">✉️ Email</option>
+                    <option value="essay">🎓 Luận văn / Essay</option>
+                  </select>
+                  <span class="char-count" id="writingCharCount">0 ký tự</span>
+                </div>
+                <button class="btn btn-primary" id="gradeWritingBtn">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Chấm Bài
+                </button>
+              </div>
+            </div>
+
+            <!-- Writing Result Area -->
+            <div class="writing-result hidden" id="writingResultArea">
+              <!-- Overall Score Ring -->
+              <div class="overall-score-section glass-panel">
+                <div class="overall-score-ring">
+                  <svg viewBox="0 0 120 120">
+                    <circle class="score-ring-bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="score-ring-fill" id="scoreRingFill" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
+                  </svg>
+                  <div class="score-ring-text">
+                    <span class="score-ring-value" id="overallScoreValue">0</span>
+                    <span class="score-ring-label">Điểm tổng</span>
+                  </div>
+                </div>
+                <p class="overall-feedback" id="overallFeedback"></p>
+              </div>
+
+              <!-- 4 Score Cards -->
+              <div class="score-overview">
+                <div class="score-card glass-panel">
+                  <div class="score-card-icon" style="color: #38bdf8;"><i class="fa-solid fa-spell-check"></i></div>
+                  <div class="score-value" id="scoreGrammar">0</div>
+                  <div class="score-label">Grammar</div>
+                  <div class="score-bar"><div class="score-bar-fill" id="scoreGrammarBar" style="background: #38bdf8;"></div></div>
+                </div>
+                <div class="score-card glass-panel">
+                  <div class="score-card-icon" style="color: #a78bfa;"><i class="fa-solid fa-book-open"></i></div>
+                  <div class="score-value" id="scoreVocabulary">0</div>
+                  <div class="score-label">Vocabulary</div>
+                  <div class="score-bar"><div class="score-bar-fill" id="scoreVocabularyBar" style="background: #a78bfa;"></div></div>
+                </div>
+                <div class="score-card glass-panel">
+                  <div class="score-card-icon" style="color: #34d399;"><i class="fa-solid fa-link"></i></div>
+                  <div class="score-value" id="scoreCoherence">0</div>
+                  <div class="score-label">Coherence</div>
+                  <div class="score-bar"><div class="score-bar-fill" id="scoreCoherenceBar" style="background: #34d399;"></div></div>
+                </div>
+                <div class="score-card glass-panel">
+                  <div class="score-card-icon" style="color: #fbbf24;"><i class="fa-solid fa-bullseye"></i></div>
+                  <div class="score-value" id="scoreTask">0</div>
+                  <div class="score-label">Task Achievement</div>
+                  <div class="score-bar"><div class="score-bar-fill" id="scoreTaskBar" style="background: #fbbf24;"></div></div>
+                </div>
+              </div>
+
+              <!-- Errors List -->
+              <div class="errors-section glass-panel">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Các lỗi phát hiện</h3>
+                <div class="error-list" id="errorList">
+                  <!-- Dynamic error items -->
+                </div>
+              </div>
+
+              <!-- Vocabulary Suggestions from Grading -->
+              <div class="vocab-upgrade-section glass-panel">
+                <h3><i class="fa-solid fa-arrow-up-right-dots"></i> Nâng cấp từ vựng</h3>
+                <div class="vocab-upgrade-list" id="vocabUpgradeList">
+                  <!-- Dynamic vocab suggestion chips -->
+                </div>
+              </div>
+
+              <!-- Corrected Essay -->
+              <div class="corrected-essay-section glass-panel">
+                <h3><i class="fa-solid fa-file-pen"></i> Bài viết đã sửa</h3>
+                <div class="corrected-essay-box" id="correctedEssayBox"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== PANEL 2: ĐỐI THOẠI AI ===== -->
+          <div class="ai-panel" id="conversationPanel">
+            <div class="chat-container glass-panel">
+              <!-- Chat Header -->
+              <div class="chat-header">
+                <div class="chat-header-controls">
+                  <select id="scenarioSelect" class="ai-select">
+                    <option value="daily">🏠 Cuộc sống hàng ngày</option>
+                    <option value="interview">💼 Phỏng vấn xin việc</option>
+                    <option value="travel">✈️ Du lịch</option>
+                    <option value="academic">🎓 Thảo luận học thuật</option>
+                    <option value="custom">🎯 Chủ đề tự do</option>
+                  </select>
+                  <select id="levelSelect" class="ai-select">
+                    <option value="beginner">🌱 Beginner</option>
+                    <option value="intermediate" selected>📚 Intermediate</option>
+                    <option value="advanced">🚀 Advanced</option>
+                  </select>
+                </div>
+                <div class="chat-header-actions">
+                  <button class="btn btn-sm btn-secondary" id="autoReadBtn" title="Tự động đọc phản hồi của AI" data-active="true">
+                    <i class="fa-solid fa-volume-high"></i> <span class="hide-mobile">Đọc AI</span>
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="analyzeErrorsBtn" title="Phân tích lỗi tin nhắn cuối">
+                    <i class="fa-solid fa-microscope"></i> Phân tích lỗi
+                  </button>
+                  <button class="btn btn-sm btn-secondary" id="clearChatBtn" title="Xóa lịch sử chat">
+                    <i class="fa-solid fa-broom"></i> Xóa chat
+                  </button>
+                </div>
+              </div>
+
+              <!-- Scenario Selection Cards (shown when no chat history) -->
+              <div class="chat-scenario-cards" id="chatScenarioCards">
+                <h3>Chọn chủ đề để bắt đầu hội thoại</h3>
+                <div class="scenario-grid">
+                  <div class="scenario-card glass-panel" data-scenario="daily">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Cuộc sống hàng ngày</span>
+                    <p>Trò chuyện về thói quen, sở thích, gia đình</p>
+                  </div>
+                  <div class="scenario-card glass-panel" data-scenario="interview">
+                    <i class="fa-solid fa-briefcase"></i>
+                    <span>Phỏng vấn xin việc</span>
+                    <p>Luyện tập trả lời câu hỏi tuyển dụng</p>
+                  </div>
+                  <div class="scenario-card glass-panel" data-scenario="travel">
+                    <i class="fa-solid fa-plane"></i>
+                    <span>Du lịch</span>
+                    <p>Hỏi đường, đặt phòng, giao tiếp khi đi chơi</p>
+                  </div>
+                  <div class="scenario-card glass-panel" data-scenario="academic">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>Học thuật</span>
+                    <p>Thảo luận nghiên cứu, bài giảng, seminars</p>
+                  </div>
+                  <div class="scenario-card glass-panel" data-scenario="custom">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Chủ đề tự do</span>
+                    <p>Bất kỳ chủ đề nào bạn muốn luyện tập</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chat Messages Area -->
+              <div class="chat-messages hidden" id="chatMessages">
+                <!-- Dynamic chat bubbles -->
+              </div>
+
+              <!-- Typing Indicator -->
+              <div class="typing-indicator hidden" id="typingIndicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <span>AI đang soạn tin...</span>
+              </div>
+
+              <!-- Chat Input -->
+              <div class="chat-input-area">
+                <button class="chat-mic-btn" id="voiceMicBtn" title="Nhấn để nói (Tiếng Anh)">
+                  <i class="fa-solid fa-microphone"></i>
+                </button>
+                <input type="text" class="chat-input" id="chatInput" placeholder="Nhập tin nhắn tiếng Anh hoặc nhấn micro để nói..." autocomplete="off">
+                <button class="chat-send-btn" id="sendChatBtn">
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== PANEL 3: GỢI Ý TỪ VỰNG ===== -->
+          <div class="ai-panel" id="vocabSuggestPanel">
+            <div class="vocab-suggest-area glass-panel">
+              <h3><i class="fa-solid fa-lightbulb"></i> Nhập đoạn văn để nhận gợi ý từ vựng nâng cao</h3>
+              <textarea class="vocab-suggest-textarea" id="vocabContextInput" placeholder="Dán một đoạn văn tiếng Anh vào đây... AI sẽ gợi ý từ vựng hay hơn, collocations phổ biến và cách diễn đạt tự nhiên hơn."></textarea>
+              <div class="writing-controls">
+                <span class="char-count" id="vocabContextCharCount">0 ký tự</span>
+                <button class="btn btn-primary" id="suggestVocabBtn">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Gợi Ý Từ Vựng
+                </button>
+              </div>
+            </div>
+
+            <!-- Vocab Suggest Results -->
+            <div class="vocab-suggest-result hidden" id="vocabSuggestResults">
+              <!-- Analysis Summary -->
+              <div class="vocab-analysis-box glass-panel" id="vocabAnalysisBox">
+                <i class="fa-solid fa-chart-line"></i>
+                <p id="vocabAnalysisText"></p>
+              </div>
+
+              <!-- Suggestion Cards -->
+              <div class="vocab-suggest-cards" id="vocabSuggestCards">
+                <!-- Dynamic suggestion cards -->
+              </div>
+
+              <!-- Collocations Section -->
+              <div class="collocation-section glass-panel" id="collocationSection">
+                <h3><i class="fa-solid fa-puzzle-piece"></i> Collocations hữu ích</h3>
+                <div class="collocation-list" id="collocationList">
+                  <!-- Dynamic collocation chips -->
+                </div>
+              </div>
+
+              <!-- Improved Paragraph -->
+              <div class="improved-paragraph-box glass-panel" id="improvedParagraphBox">
+                <h3><i class="fa-solid fa-arrow-up-right-dots"></i> Đoạn văn đã nâng cấp</h3>
+                <div class="improved-text" id="improvedText"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: THÊM / SỬA TỪ VỰNG -->
+  <div id="vocabModal" class="modal-overlay hidden">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3 id="modalTitle"><i class="fa-solid fa-square-plus"></i> Thêm Từ Vựng Theo Ngày</h3>
+        <button class="modal-close-btn" id="closeVocabModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="vocabForm" class="modal-form">
+        <input type="hidden" id="vocabIdInput">
+
+        <!-- Date Selection Field -->
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="vocabDateInput"><i class="fa-regular fa-calendar"></i> Ngày học <span class="required">*</span></label>
+            <div class="date-input-wrapper">
+              <input type="date" id="vocabDateInput" required>
+              <button type="button" class="btn-xs" id="setTodayBtn">Hôm nay</button>
+              <button type="button" class="btn-xs" id="setYesterdayBtn">Hôm qua</button>
+            </div>
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="vocabTypeInput"><i class="fa-solid fa-font"></i> Từ loại</label>
+            <select id="vocabTypeInput">
+              <option value="noun">Noun (Danh từ)</option>
+              <option value="verb">Verb (Động từ)</option>
+              <option value="adjective">Adjective (Tính từ)</option>
+              <option value="adverb">Adverb (Trạng từ)</option>
+              <option value="phrase">Phrase (Cụm từ)</option>
+              <option value="idiom">Idiom (Thành ngữ)</option>
+              <option value="other">Khác</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="vocabWordInput"><i class="fa-solid fa-spell-check"></i> Từ vựng (English) <span class="required">*</span></label>
+            <input type="text" id="vocabWordInput" placeholder="Ví dụ: Resilient, Perseverance..." required autocomplete="off">
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="vocabPhoneticInput"><i class="fa-solid fa-volume-low"></i> Phiên âm</label>
+            <input type="text" id="vocabPhoneticInput" placeholder="/rɪˈzɪl.jənt/">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="vocabMeaningInput"><i class="fa-solid fa-language"></i> Nghĩa tiếng Việt <span class="required">*</span></label>
+          <input type="text" id="vocabMeaningInput" placeholder="Nghĩa tiếng Việt của từ..." required autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label for="vocabExampleInput"><i class="fa-solid fa-quote-right"></i> Câu ví dụ minh họa</label>
+          <textarea id="vocabExampleInput" rows="2" placeholder="She is resilient in the face of hardship..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="vocabTagInput"><i class="fa-solid fa-tags"></i> Chủ đề / Thẻ (Phân cách bằng dấu phẩy)</label>
+            <input type="text" id="vocabTagInput" placeholder="IELTS, Work, Daily, Academic">
+          </div>
+
+          <div class="form-group flex-1">
+            <label><i class="fa-solid fa-signal"></i> Mức độ thuộc</label>
+            <select id="vocabStatusInput">
+              <option value="new">🆕 Mới học</option>
+              <option value="reviewing">🔄 Đang ôn tập</option>
+              <option value="mastered">✅ Đã thành thạo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelVocabModalBtn">Hủy</button>
+          <button type="submit" class="btn btn-primary" id="saveVocabBtn">
+            <i class="fa-solid fa-check"></i> Lưu Từ Vựng
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DATA EXPORT / IMPORT -->
+  <div id="dataModal" class="modal-overlay hidden">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-database"></i> Quản Lý & Sao Lưu Dữ Liệu</h3>
+        <button class="modal-close-btn" id="closeDataModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body data-modal-body">
+        <div class="data-box">
+          <h4><i class="fa-solid fa-file-export"></i> Xuất dữ liệu (Backup)</h4>
+          <p>Tải toàn bộ từ vựng đã học dưới dạng tệp JSON để lưu trữ an toàn.</p>
+          <button class="btn btn-primary" id="exportDataBtn">
+            <i class="fa-solid fa-download"></i> Tải về tập tin JSON
+          </button>
+        </div>
+
+        <hr class="divider">
+
+        <div class="data-box">
+          <h4><i class="fa-solid fa-file-import"></i> Nhập dữ liệu (Restore)</h4>
+          <p>Nạp lại tệp dữ liệu JSON từ vựng từ thiết bị khác hoặc bản sao lưu cũ.</p>
+          <input type="file" id="importFileInput" accept=".json" class="hidden">
+          <button class="btn btn-secondary" id="importDataBtn">
+            <i class="fa-solid fa-upload"></i> Chọn tập tin JSON
+          </button>
+        </div>
+
+        <hr class="divider">
+
+        <div class="data-box danger-zone">
+          <h4><i class="fa-solid fa-triangle-exclamation"></i> Khôi phục mẫu / Xóa dữ liệu</h4>
+          <p>Khôi phục danh sách từ vựng mẫu ban đầu hoặc xóa hoàn toàn bộ nhớ.</p>
+          <div class="btn-group">
+            <button class="btn btn-warning" id="loadSampleDataBtn">
+              <i class="fa-solid fa-rotate"></i> Nạp dữ liệu mẫu
+            </button>
+            <button class="btn btn-danger" id="clearAllDataBtn">
+              <i class="fa-solid fa-trash-can"></i> Xóa tất cả từ vựng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: API KEY SETUP -->
+  <div id="apiKeyModal" class="modal-overlay hidden">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-key"></i> Cài Đặt Gemini API Key</h3>
+        <button class="modal-close-btn" id="closeApiKeyModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="api-setup-guide">
+          <p><i class="fa-solid fa-circle-info"></i> Để sử dụng tính năng AI Tutor, bạn cần cung cấp Gemini API Key miễn phí từ Google.</p>
+          <ol>
+            <li>Truy cập <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a></li>
+            <li>Đăng nhập bằng tài khoản Google</li>
+            <li>Nhấn <strong>"Create API Key"</strong></li>
+            <li>Sao chép key và dán vào ô bên dưới</li>
+          </ol>
+        </div>
+        <div class="api-key-input-group">
+          <input type="password" class="api-key-input" id="apiKeyInput" placeholder="Dán Gemini API Key tại đây..." autocomplete="off">
+          <button class="btn btn-sm btn-secondary" id="toggleApiKeyVisibility" title="Hiện/ẩn key">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+        <div class="api-key-actions">
+          <button class="btn btn-secondary" id="testApiKeyBtn">
+            <i class="fa-solid fa-plug"></i> Kiểm tra kết nối
+          </button>
+          <button class="btn btn-primary" id="saveApiKeyBtn">
+            <i class="fa-solid fa-check"></i> Lưu API Key
+          </button>
+        </div>
+        <div class="api-key-status" id="apiKeyStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="gemini-service.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
