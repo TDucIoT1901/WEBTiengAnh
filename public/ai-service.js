@@ -1,8 +1,8 @@
-class GeminiService {
+class AiService {
   constructor() {
-    this.model = 'gemini-3.7-flash';
-    this.endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent`;
-    this.apiKeyStorageKey = 'vocabdaily_gemini_api_key';
+    this.model = 'gpt-4o-mini'; // or 'gpt-3.5-turbo'
+    this.endpoint = 'https://api.openai.com/v1/chat/completions';
+    this.apiKeyStorageKey = 'vocabdaily_openai_api_key';
   }
 
   setApiKey(key) {
@@ -20,32 +20,30 @@ class GeminiService {
   async testConnection() {
     const apiKey = this.getApiKey();
     if (!apiKey) {
-      return { success: false, message: 'Vui lòng nhập API Key của Gemini.' };
+      return { success: false, message: 'Vui lòng nhập API Key của OpenAI (ChatGPT).' };
     }
 
-    // Validate key format
-    if (!apiKey.startsWith('AIza') && !apiKey.startsWith('AQ.')) {
-      return { success: false, message: 'API Key không đúng định dạng! Key Gemini thường bắt đầu bằng "AIza..." hoặc "AQ.". Hãy kiểm tra lại key từ Google AI Studio.' };
+    if (!apiKey.startsWith('sk-')) {
+      return { success: false, message: 'API Key không đúng định dạng! Key OpenAI thường bắt đầu bằng "sk-".' };
     }
 
     try {
-      const response = await fetch(`${this.endpoint}?key=${apiKey}`, {
+      const response = await fetch(this.endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: 'Hello, this is a test connection. Reply with "OK".' }] }],
-          generationConfig: {
-            maxOutputTokens: 10
-          }
+          model: this.model,
+          messages: [{ role: 'user', content: 'Hello, this is a test connection. Reply with "OK".' }],
+          max_tokens: 10
         })
       });
 
       if (response.ok) {
-        return { success: true, message: 'Kết nối thành công! ✅' };
+        return { success: true, message: 'Kết nối ChatGPT thành công! ✅' };
       } else {
-        // Try to get detailed error from response body
         let detail = '';
         try {
           const errBody = await response.json();
@@ -56,46 +54,41 @@ class GeminiService {
         return errorResult;
       }
     } catch (error) {
-      return { success: false, message: 'Lỗi mạng hoặc không thể kết nối tới máy chủ Gemini.' };
+      return { success: false, message: 'Lỗi mạng hoặc không thể kết nối tới máy chủ OpenAI.' };
     }
   }
 
-  async _callGemini(systemPrompt, userContent, messages = null) {
+  async _callOpenAI(systemPrompt, userContent, previousMessages = null) {
     const apiKey = this.getApiKey();
     if (!apiKey) {
-      throw new Error('Vui lòng nhập API Key của Gemini.');
+      throw new Error('Vui lòng nhập API Key của OpenAI.');
     }
 
-    let contents = [];
+    let messages = [
+      { role: 'system', content: systemPrompt }
+    ];
     
-    if (messages) {
-      // Map existing messages to Gemini format
-      contents = messages.map(msg => ({
-        role: msg.role === 'model' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }));
+    if (previousMessages) {
+      messages = messages.concat(previousMessages.map(msg => ({
+        role: msg.role === 'model' ? 'assistant' : 'user',
+        content: msg.content
+      })));
     } else {
-      contents = [{
-        role: 'user',
-        parts: [{ text: userContent }]
-      }];
+      messages.push({ role: 'user', content: userContent });
     }
 
     const requestBody = {
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      },
-      contents: contents,
-      generationConfig: {
-        responseMimeType: 'application/json',
-      }
+      model: this.model,
+      messages: messages,
+      response_format: { type: "json_object" }
     };
 
     try {
-      const response = await fetch(`${this.endpoint}?key=${apiKey}`, {
+      const response = await fetch(this.endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify(requestBody)
       });
@@ -106,7 +99,7 @@ class GeminiService {
       }
 
       const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const text = data.choices?.[0]?.message?.content;
       
       if (!text) {
         throw new Error('Định dạng phản hồi từ API không hợp lệ.');
@@ -114,20 +107,20 @@ class GeminiService {
 
       return this._parseJSON(text);
     } catch (error) {
-      throw new Error(error.message || 'Lỗi không xác định khi gọi Gemini API.');
+      throw new Error(error.message || 'Lỗi không xác định khi gọi OpenAI API.');
     }
   }
 
   _handleApiError(status) {
-    let message = 'Lỗi không xác định từ Gemini API.';
+    let message = 'Lỗi không xác định từ OpenAI API.';
     if (status === 401 || status === 403) {
       message = 'API Key không hợp lệ hoặc không có quyền truy cập.';
     } else if (status === 429) {
-      message = 'Vượt quá giới hạn yêu cầu (Rate Limit). Vui lòng thử lại sau.';
+      message = 'Vượt quá giới hạn yêu cầu (Rate Limit) hoặc hết tiền trong tài khoản OpenAI.';
     } else if (status >= 500) {
-      message = 'Lỗi máy chủ Gemini. Vui lòng thử lại sau.';
+      message = 'Lỗi máy chủ OpenAI. Vui lòng thử lại sau.';
     } else {
-      message = `Lỗi từ Gemini API: Mã ${status}`;
+      message = `Lỗi từ OpenAI API: Mã ${status}`;
     }
     return { success: false, message };
   }
@@ -183,7 +176,7 @@ You must ALWAYS respond ONLY in valid JSON format matching this schema:
   "overallFeedbackEn": "<Detailed overall feedback in English>"
 }`;
 
-    return await this._callGemini(systemPrompt, essay);
+    return await this._callOpenAI(systemPrompt, essay);
   }
 
   async chat(messages, scenario = 'daily', level = 'intermediate') {
@@ -210,7 +203,7 @@ You must ALWAYS respond ONLY in valid JSON format matching this schema:
   ]
 }`;
 
-    return await this._callGemini(systemPrompt, null, messages);
+    return await this._callOpenAI(systemPrompt, null, messages);
   }
 
   async suggestVocabulary(paragraph) {
@@ -239,7 +232,7 @@ You must ALWAYS respond ONLY in valid JSON format matching this schema:
   "improvedParagraph": "<full paragraph with improvements applied>"
 }`;
 
-    return await this._callGemini(systemPrompt, paragraph);
+    return await this._callOpenAI(systemPrompt, paragraph);
   }
 
   async analyzeErrors(message) {
@@ -258,7 +251,7 @@ You must ALWAYS respond ONLY in valid JSON format matching this schema:
   "tips": ["<array of brief tips in Vietnamese>"]
 }`;
 
-    return await this._callGemini(systemPrompt, message);
+    return await this._callOpenAI(systemPrompt, message);
   }
 
   async gradeTOEICSpeaking(response, questionType, promptContent) {
@@ -282,7 +275,7 @@ You must ALWAYS respond ONLY in valid JSON format matching this schema:
   "improvedResponse": "<a better, native-like response>",
   "overallFeedbackVi": "<Detailed overall feedback in Vietnamese>"
 }`;
-    return await this._callGemini(systemPrompt, response);
+    return await this._callOpenAI(systemPrompt, response);
   }
 
   async gradeTOEICWriting(response, questionType, promptContent) {
@@ -306,8 +299,8 @@ You must ALWAYS respond ONLY in valid JSON format matching this schema:
   "improvedResponse": "<a better, native-like response>",
   "overallFeedbackVi": "<Detailed overall feedback in Vietnamese>"
 }`;
-    return await this._callGemini(systemPrompt, response);
+    return await this._callOpenAI(systemPrompt, response);
   }
 }
 
-const geminiService = new GeminiService();
+const aiService = new AiService();

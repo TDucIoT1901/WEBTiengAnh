@@ -69,7 +69,7 @@
         <button class="btn btn-primary" id="openAddModalBtn">
           <i class="fa-solid fa-plus"></i> Thêm Từ Mới
         </button>
-        <button class="btn btn-secondary icon-btn" id="openApiKeyModalBtn" title="Cài đặt Gemini API Key">
+        <button class="btn btn-secondary icon-btn" id="openApiKeyModalBtn" title="Cài đặt ChatGPT API Key">
           <i class="fa-solid fa-key"></i>
         </button>
         <button class="btn btn-secondary icon-btn" id="openDataModalBtn" title="Sao lưu & Khôi phục dữ liệu">
@@ -310,7 +310,7 @@
           <div class="api-key-banner glass-panel disconnected" id="apiKeyBanner">
             <div class="api-key-banner-left">
               <i class="fa-solid fa-circle-info"></i>
-              <span id="apiKeyBannerText">Chưa cấu hình Gemini API Key. Nhấn nút <strong>🔑 Cài đặt API Key</strong> ở header để bắt đầu.</span>
+              <span id="apiKeyBannerText">Chưa cấu hình ChatGPT API Key. Nhấn nút <strong>🔑 Cài đặt API Key</strong> ở header để bắt đầu.</span>
             </div>
             <button class="btn btn-sm btn-secondary" id="bannerSetupApiBtn">
               <i class="fa-solid fa-gear"></i> Cài đặt
@@ -831,12 +831,12 @@
   <div id="apiKeyModal" class="modal-overlay hidden">
     <div class="modal-card glass-panel">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-key"></i> Cài Đặt Gemini API Key</h3>
+        <h3><i class="fa-solid fa-key"></i> Cài Đặt ChatGPT API Key</h3>
         <button class="modal-close-btn" id="closeApiKeyModalBtn"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <div class="api-setup-guide">
-          <p><i class="fa-solid fa-circle-info"></i> Để sử dụng tính năng AI Tutor, bạn cần cung cấp Gemini API Key miễn phí từ Google.</p>
+          <p><i class="fa-solid fa-circle-info"></i> Để sử dụng tính năng AI Tutor, bạn cần cung cấp ChatGPT API Key miễn phí từ Google.</p>
           <ol>
             <li>Truy cập <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a></li>
             <li>Đăng nhập bằng tài khoản Google</li>
@@ -845,7 +845,7 @@
           </ol>
         </div>
         <div class="api-key-input-group">
-          <input type="password" class="api-key-input" id="apiKeyInput" placeholder="Dán Gemini API Key tại đây..." autocomplete="off">
+          <input type="password" class="api-key-input" id="apiKeyInput" placeholder="Dán ChatGPT API Key tại đây..." autocomplete="off">
           <button class="btn btn-sm btn-secondary" id="toggleApiKeyVisibility" title="Hiện/ẩn key">
             <i class="fa-solid fa-eye"></i>
           </button>
@@ -866,7 +866,7 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="gemini-service.js"></script>
+  <script src="ChatGPT-service.js"></script>
   <script src="app.js"></script>
   <script src="toeic.js"></script>
 </body>

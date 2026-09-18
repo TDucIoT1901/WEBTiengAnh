@@ -858,14 +858,14 @@ function initAITutorListeners() {
   const apiKeyModal = document.getElementById('apiKeyModal');
   document.getElementById('openApiKeyModalBtn').addEventListener('click', async () => {
     apiKeyModal.classList.remove('hidden');
-    let existingKey = geminiService.getApiKey();
+    let existingKey = aiService.getApiKey();
     if (!existingKey) {
       const res = await apiRequest('/api/settings/apikey');
       if (res && res.ok) {
         const data = await res.json();
         if (data.apiKey) {
           existingKey = data.apiKey;
-          geminiService.setApiKey(existingKey);
+          aiService.setApiKey(existingKey);
         }
       }
     }
@@ -874,14 +874,14 @@ function initAITutorListeners() {
   document.getElementById('closeApiKeyModalBtn').addEventListener('click', () => apiKeyModal.classList.add('hidden'));
   document.getElementById('bannerSetupApiBtn').addEventListener('click', async () => {
     apiKeyModal.classList.remove('hidden');
-    let existingKey = geminiService.getApiKey();
+    let existingKey = aiService.getApiKey();
     if (!existingKey) {
       const res = await apiRequest('/api/settings/apikey');
       if (res && res.ok) {
         const data = await res.json();
         if (data.apiKey) {
           existingKey = data.apiKey;
-          geminiService.setApiKey(existingKey);
+          aiService.setApiKey(existingKey);
         }
       }
     }
@@ -909,9 +909,9 @@ function initAITutorListeners() {
       statusEl.innerHTML = '<span class="status-error"><i class="fa-solid fa-xmark"></i> Vui lòng nhập API Key</span>';
       return;
     }
-    geminiService.setApiKey(keyInput);
+    aiService.setApiKey(keyInput);
     statusEl.innerHTML = '<span class="status-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra kết nối...</span>';
-    const result = await geminiService.testConnection();
+    const result = await aiService.testConnection();
     if (result.success) {
       statusEl.innerHTML = `<span class="status-success"><i class="fa-solid fa-circle-check"></i> ${result.message}</span>`;
     } else {
@@ -926,14 +926,14 @@ function initAITutorListeners() {
       showToast('Vui lòng nhập API Key trước khi lưu!', 'warning');
       return;
     }
-    geminiService.setApiKey(keyInput);
+    aiService.setApiKey(keyInput);
     
     await apiRequest('/api/settings/apikey', {
       method: 'PUT',
       body: JSON.stringify({ apiKey: keyInput })
     });
     
-    showToast('Đã lưu Gemini API Key thành công!', 'success');
+    showToast('Đã lưu ChatGPT API Key thành công!', 'success');
     apiKeyModal.classList.add('hidden');
     updateApiKeyBanner();
   });
@@ -1026,22 +1026,22 @@ function initAITutorListeners() {
 function updateApiKeyBanner() {
   const banner = document.getElementById('apiKeyBanner');
   const bannerText = document.getElementById('apiKeyBannerText');
-  const apiKey = geminiService.getApiKey();
+  const apiKey = aiService.getApiKey();
 
   if (apiKey) {
     banner.classList.remove('disconnected');
     banner.classList.add('connected');
-    bannerText.innerHTML = '<i class="fa-solid fa-circle-check"></i> Gemini API đã kết nối. Sẵn sàng sử dụng AI Tutor!';
+    bannerText.innerHTML = '<i class="fa-solid fa-circle-check"></i> ChatGPT API đã kết nối. Sẵn sàng sử dụng AI Tutor!';
   } else {
     banner.classList.remove('connected');
     banner.classList.add('disconnected');
-    bannerText.innerHTML = 'Chưa cấu hình Gemini API Key. Nhấn nút <strong>🔑 Cài đặt API Key</strong> ở header để bắt đầu.';
+    bannerText.innerHTML = 'Chưa cấu hình ChatGPT API Key. Nhấn nút <strong>🔑 Cài đặt API Key</strong> ở header để bắt đầu.';
   }
 }
 
 function checkApiKey() {
-  if (!geminiService.getApiKey()) {
-    showToast('Vui lòng cài đặt Gemini API Key trước!', 'warning');
+  if (!aiService.getApiKey()) {
+    showToast('Vui lòng cài đặt ChatGPT API Key trước!', 'warning');
     document.getElementById('apiKeyModal').classList.remove('hidden');
     return false;
   }
@@ -1071,7 +1071,7 @@ async function handleGradeWriting() {
   vocabState.isAIProcessing = true;
 
   try {
-    const result = await geminiService.gradeWriting(essay, taskType);
+    const result = await aiService.gradeWriting(essay, taskType);
 
     if (result.error) {
       showToast(result.error, 'warning');
@@ -1218,7 +1218,7 @@ async function startConversationWithGreeting(scenario) {
   showTypingIndicator(true);
 
   try {
-    const result = await geminiService.chat(
+    const result = await aiService.chat(
       vocabState.chatHistory,
       scenario,
       vocabState.currentLevel
@@ -1265,7 +1265,7 @@ async function handleSendChat() {
   showTypingIndicator(true);
 
   try {
-    const result = await geminiService.chat(
+    const result = await aiService.chat(
       vocabState.chatHistory,
       vocabState.currentScenario,
       vocabState.currentLevel
@@ -1373,7 +1373,7 @@ async function handleAnalyzeErrors() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích...';
 
   try {
-    const result = await geminiService.analyzeErrors(lastUserMsg.content);
+    const result = await aiService.analyzeErrors(lastUserMsg.content);
 
     if (result.error) {
       showToast(result.error, 'warning');
@@ -1556,7 +1556,7 @@ async function handleSuggestVocab() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích...';
 
   try {
-    const result = await geminiService.suggestVocabulary(paragraph);
+    const result = await aiService.suggestVocabulary(paragraph);
 
     if (result.error) {
       showToast(result.error, 'warning');

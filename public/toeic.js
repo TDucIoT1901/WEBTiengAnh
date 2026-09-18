@@ -1,4 +1,4 @@
-﻿// toeic.js - Logic for TOEIC Practice Tab
+// toeic.js - Logic for TOEIC Practice Tab
 
 document.addEventListener('DOMContentLoaded', () => {
   // TOEIC Sub-navigation
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "Respond using Information Provided:\nInformation: 'Botanical Gardens Tour. June 5. Tickets $25. 9:00am: Meet at front entrance. 9:15-10:00: Walking tour of outdoor gardens. 12:00-1:00pm: Lunch in Garden Cafe. 3:00-4:00: Tea and pastries in the outdoor garden.'\nQuestion 7: Can you tell me where the tour begins?\nQuestion 8: How much are tickets?\nQuestion 9: Will any meals be served during the tour?"
       ],
       'q10': [
-        "Propose a Solution:\nRole: Customer Service Representative. Message: 'Hi, this is Sarah Brown. I’d like to make a complaint about a problem I’ve been having with my new stove. We just bought it two weeks ago, but the last few times I’ve turned it on, nothing has happened. Then, when I try again, it works. I don’t know what the issue is, but I need to get it fixed right away. I have people coming over for dinner on Friday night, and it’s already Tuesday. I really need someone to come out and have a look at it. I’d prefer it if someone could come today or, at the latest, tomorrow. Please call me back as soon as possible. Sarah Brown at 906-555-7272. Thank you.'"
+        "Propose a Solution:\nRole: Customer Service Representative. Message: 'Hi, this is Sarah Brown. I�d like to make a complaint about a problem I�ve been having with my new stove. We just bought it two weeks ago, but the last few times I�ve turned it on, nothing has happened. Then, when I try again, it works. I don�t know what the issue is, but I need to get it fixed right away. I have people coming over for dinner on Friday night, and it�s already Tuesday. I really need someone to come out and have a look at it. I�d prefer it if someone could come today or, at the latest, tomorrow. Please call me back as soon as possible. Sarah Brown at 906-555-7272. Thank you.'"
       ],
       'q11': [
         "Express an Opinion: Do you agree or disagree with the following statement? 'Young people should not be allowed to drive cars until they are twenty-one years old.' Use specific reasons and examples to support your answer.",
@@ -79,24 +79,24 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('gradeSpeakingBtn').addEventListener('click', async () => {
     const responseText = document.getElementById('toeicSpeakingResponse').value.trim();
     if (!responseText) {
-      if(window.showToast) window.showToast('Vui lòng nhập câu trả lời của bạn.', 'warning');
+      if(window.showToast) window.showToast('Vui l�ng nh?p c�u tr? l?i c?a b?n.', 'warning');
       return;
     }
     
     const promptArea = document.getElementById('toeicSpeakingPromptArea').innerText;
-    if (promptArea.includes('Nhấn "Tạo Đề Mới"')) {
-      if(window.showToast) window.showToast('Vui lòng tạo đề trước khi chấm.', 'warning');
+    if (promptArea.includes('Nh?n "T?o �? M?i"')) {
+      if(window.showToast) window.showToast('Vui l�ng t?o d? tru?c khi ch?m.', 'warning');
       return;
     }
 
     const btn = document.getElementById('gradeSpeakingBtn');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chấm điểm...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> �ang ch?m di?m...';
     btn.disabled = true;
 
     try {
       const type = document.getElementById('toeicSpeakingTypeSelect').value;
-      const result = await geminiService.gradeTOEICSpeaking(responseText, type, promptArea);
+      const result = await aiService.gradeTOEICSpeaking(responseText, type, promptArea);
       renderSpeakingResult(result);
     } catch (e) {
       if(window.showToast) window.showToast(e.message, 'warning');
@@ -110,24 +110,24 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('gradeWritingBtn').addEventListener('click', async () => {
     const responseText = document.getElementById('toeicWritingResponse').value.trim();
     if (!responseText) {
-      if(window.showToast) window.showToast('Vui lòng nhập bài viết của bạn.', 'warning');
+      if(window.showToast) window.showToast('Vui l�ng nh?p b�i vi?t c?a b?n.', 'warning');
       return;
     }
     
     const promptArea = document.getElementById('toeicWritingPromptArea').innerText;
-    if (promptArea.includes('Nhấn "Tạo Đề Mới"')) {
-      if(window.showToast) window.showToast('Vui lòng tạo đề trước khi chấm.', 'warning');
+    if (promptArea.includes('Nh?n "T?o �? M?i"')) {
+      if(window.showToast) window.showToast('Vui l�ng t?o d? tru?c khi ch?m.', 'warning');
       return;
     }
 
     const btn = document.getElementById('gradeWritingBtn');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chấm điểm...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> �ang ch?m di?m...';
     btn.disabled = true;
 
     try {
       const type = document.getElementById('toeicWritingTypeSelect').value;
-      const result = await geminiService.gradeTOEICWriting(responseText, type, promptArea);
+      const result = await aiService.gradeTOEICWriting(responseText, type, promptArea);
       renderWritingResult(result);
     } catch (e) {
       if(window.showToast) window.showToast(e.message, 'warning');
